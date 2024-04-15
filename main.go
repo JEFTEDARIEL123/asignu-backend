@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
+	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -87,4 +89,33 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error al ejecutar SQL Script: %v", err)
 	}
+
+	// Se inicializa el router
+
+	router := mux.NewRouter()
+	router.HandleFunc("/login/{cedula}", func(w http.ResponseWriter, router *http.Request) {
+
+		vars := mux.Vars(router)
+		cedula := vars["cedula"]
+
+		// Consulta SQL para saber si existe esa cedula.
+		var counter int
+		err := db.QueryRow("SELECT COUNT(*) FROM personal WHERE cedula = ?", cedula).Scan(&counter)
+		if err != nil {
+			log.Println("Error al ejecutar la consulta en el servidor", err)
+			http.Error(w, "Ha ocurrido un error mientras se verificaba el número de cedula.", http.StatusInternalServerError)
+			return
+		}
+
+		// Revisa si el contador encontro alguna coincidencia con la ced
+		if counter > 0 {
+			fmt.Fprintln(w, "true")
+		} else {
+			http.Error(w, "El numero de cédula no existe", http.StatusNotFound)
+		}
+	}).Methods("GET")
+
+	//incializa el server http
+	log.Println("El servidor está escuchando en el puerto 8080")
+	http.ListenAndServe(":8080", router)
 }
