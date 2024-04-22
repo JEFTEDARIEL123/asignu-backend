@@ -82,7 +82,7 @@ func main() {
       hora_salida DATETIME,
       FOREIGN KEY (cedula_ingreso) REFERENCES personal(cedula)
     );
-		`
+	`
 
 	// Ejecuta el script guardado en sqlScript.
 	_, err = db.Exec(sqlScript)
@@ -109,9 +109,11 @@ func main() {
 
 		// Revisa si el contador encontro alguna coincidencia con la ced
 		if counter > 0 {
-			fmt.Fprintln(w, "true")
+			fmt.Fprintln(w, "El numero de cedula existe.")
+			log.Println("Se autorizo una conexión")
 		} else {
-			http.Error(w, "El numero de cédula no existe", http.StatusNotFound)
+			http.Error(w, "El numero de cedula no existe.", http.StatusNotFound)
+			log.Println("Se denego una conexión")
 		}
 	}).Methods("GET")
 
